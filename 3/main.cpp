@@ -1,61 +1,51 @@
 #include <iostream>
 #include <memory>
+#include <string>
 
-class AbstractEntity {
+class ILogger {
 public:
-    virtual ~AbstractEntity() {}
+    virtual void Log(const std::string &logText) = 0;
+    virtual ~ILogger() {}
 };
 
-class AccountEntity : public AbstractEntity {
+class FileLogger : public ILogger {
 public:
-    AccountEntity() { std::cout << "AccountEntity создан" << std::endl; }
-};
-
-class RoleEntity : public AbstractEntity {
-public:
-    RoleEntity() { std::cout << "RoleEntity создан" << std::endl; }
-};
-
-class IRepository {
-public:
-    virtual void Save(std::shared_ptr<AbstractEntity> entity) = 0;
-    virtual ~IRepository() {}
-};
-
-class AccountRepository : public IRepository {
-public:
-    void Save(std::shared_ptr<AbstractEntity> entity) override {
-        if (std::dynamic_pointer_cast<AccountEntity>(entity)) {
-            std::cout << "AccountRepository: сохранение AccountEntity" << std::endl;
-        } else {
-            std::cout << "AccountRepository: неверный тип сущности" << std::endl;
-        }
+    void Log(const std::string &logText) override {
+        std::cout << "FileLogger: сохранение лога в файле: " << logText << std::endl;
     }
 };
 
-class RoleRepository : public IRepository {
+class DatabaseLogger : public ILogger {
 public:
-    void Save(std::shared_ptr<AbstractEntity> entity) override {
-        if (std::dynamic_pointer_cast<RoleEntity>(entity)) {
-            std::cout << "RoleRepository: сохранение RoleEntity" << std::endl;
+    void Log(const std::string &logText) override {
+        std::cout << "DatabaseLogger: сохранение лога в базе данных: " << logText << std::endl;
+    }
+};
+
+class SmtpMailer {
+private:
+    std::shared_ptr<ILogger> logger;
+public:
+    SmtpMailer(std::shared_ptr<ILogger> logger) : logger(logger) {}
+
+    void SendMessage(const std::string &message) {
+        std::cout << "SmtpMailer: отправка сообщения: " << message << std::endl;
+        if (logger) {
+            logger->Log(message);
         } else {
-            std::cout << "RoleRepository: неверный тип сущности" << std::endl;
+            std::cout << "Нет логгера для записи сообщения." << std::endl;
         }
     }
 };
 
 int main() {
-    auto accountEntity = std::make_shared<AccountEntity>();
-    auto roleEntity = std::make_shared<RoleEntity>();
-    
-    std::shared_ptr<IRepository> accountRepo = std::make_shared<AccountRepository>();
-    std::shared_ptr<IRepository> roleRepo = std::make_shared<RoleRepository>();
+    std::shared_ptr<ILogger> fileLogger = std::make_shared<FileLogger>();
+    SmtpMailer mailerFile(fileLogger);
+    mailerFile.SendMessage("Это письмо через FileLogger!");
 
-    accountRepo->Save(accountEntity);
-    roleRepo->Save(roleEntity);
-
-    accountRepo->Save(roleEntity);
-    roleRepo->Save(accountEntity);
+    std::shared_ptr<ILogger> dbLogger = std::make_shared<DatabaseLogger>();
+    SmtpMailer mailerDB(dbLogger);
+    mailerDB.SendMessage("Это письмо через DatabaseLogger!");
 
     return 0;
 }

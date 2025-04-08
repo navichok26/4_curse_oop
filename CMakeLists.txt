@@ -14,7 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined")
 include_directories(${CMAKE_SOURCE_DIR}/deps/include)
 
 # Создаем список подпапок, в которых находятся main.cpp
-set(SUBDIRS 1 2 3)
+set(SUBDIRS 1 2 3 4)
 
 
 # Проходим по каждой подпапке и добавляем цель для компиляции main.cpp
